@@ -12,8 +12,8 @@ public class AppAccountUtils {
 
     public static Integer getId(AppAccount appAccount) throws Exception {
 
-        String str = "SELECT id FROM users WHERE email = '%s' AND username = '%s'";
-        String query = String.format(str, appAccount.getEmail(),appAccount.getUsername());
+        String str = "SELECT id FROM users WHERE email = '%s' AND username = '%s' AND password = '%s';";
+        String query = String.format(str, appAccount.getEmail(),appAccount.getUsername(),appAccount.getPassword());
 
         List<Map<String, Object>> result = db.executeQuery(query);
 
@@ -34,7 +34,7 @@ public class AppAccountUtils {
         if(id != null) throw new Exception("Exista deja un cont cu datele introduse!");
 
         String query = String.format(
-            "INSERT INTO users (email, username, password) VALUES ('%s', '%s', '%s');",
+            "INSERT INTO users (email, username, password, login) VALUES ('%s', '%s', '%s', true);",
                     user.getEmail(), user.getUsername(), user.getPassword()
                 );
         db.executeQuery(query);

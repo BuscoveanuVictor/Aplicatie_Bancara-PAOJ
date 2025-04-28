@@ -80,7 +80,7 @@ public class DataBase implements IDataBase {
         }
         else {
             int updateCount = statement.getUpdateCount();
-            System.out.println("Rows affected: " + updateCount);
+            //System.out.println("Rows affected: " + updateCount);
             return new ArrayList<>();
         }
     }
