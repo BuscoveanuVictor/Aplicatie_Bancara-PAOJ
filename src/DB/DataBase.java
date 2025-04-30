@@ -19,7 +19,7 @@ public class DataBase implements IDataBase {
     private static DataBase instance;
     private Connection connection = null;
 
-    private final String URL = "jdbc:postgresql://localhost:5432/postgres"; // <- numele bazei de date
+    private final String URL = "jdbc:postgresql://db:5432/postgres"; // <- numele bazei de date
     private final String PASSWORD = "mugly11"; // server password
     private final String USERNAME = "postgres"; // server username
 

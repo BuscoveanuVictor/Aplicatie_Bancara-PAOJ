@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    stdin_open: true     # Permite input din terminal (echivalent cu -i)
+    tty: true            # Alocă un terminal (echivalent cu -t)
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=host.docker.internal   # Modifici doar această linie
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=mugly11
+    volumes:
+      - ./src:/app/src
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mugly11
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,7 +1,6 @@
 package AppAccount;
 
 import DB.DataBase;
-
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +16,7 @@ public class AppAccountUtils {
 
         List<Map<String, Object>> result = db.executeQuery(query);
 
-        return result.isEmpty() ? null : (Integer)result.getFirst().get("id");
+        return result.isEmpty() ? null : (Integer)result.get(0).get("id");
     }
 
     public static void login(AppAccount user) throws Exception{

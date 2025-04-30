@@ -1,15 +1,13 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-
-
-import BankAccount.BankAccount;
 import AppAccount.AppAccount;
 import AppAccount.AppAccountUtils;
+import BankAccount.BankAccount;
 import BankAccount.BankAccountUtils;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 
 public class Main {
@@ -249,7 +247,7 @@ public class Main {
 
                 }
                 case SERVICES.DEPUNERE_BANI -> {
-                    System.out.println(SERVICES.INREGISTRARE);
+                    System.out.println(SERVICES.DEPUNERE_BANI);
                     System.out.println("Introduceti suma de bani pe care doriti sa o depuneti: ");
                     double suma = SCANNER.nextDouble();
 

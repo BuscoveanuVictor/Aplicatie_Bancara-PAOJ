@@ -1,9 +1,9 @@
 package DB;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
-import java.util.ArrayList;
 
 public class Logs extends Logger{
 
@@ -11,7 +11,7 @@ public class Logs extends Logger{
     private ArrayList<FileHandler> fh;
 
     private void createFileHandler(String name) throws IOException {
-        fh.addLast(new FileHandler(name));
+        fh.add(new FileHandler(name));
     }
 
     public Logs(String name, String resourceBundleName) {
