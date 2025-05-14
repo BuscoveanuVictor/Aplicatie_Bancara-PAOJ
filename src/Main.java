@@ -2,13 +2,14 @@ import AppAccount.AppAccount;
 import AppAccount.AppAccountUtils;
 import BankAccount.BankAccount;
 import BankAccount.BankAccountUtils;
+import DB.DataBase;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-
 
 public class Main {
 
@@ -175,7 +176,8 @@ public class Main {
         return bankAccounts;
     }
 
-    public static void displayBankAccounts(AppAccount appAccount) {
+    public static void displayBankAccounts(AppAccount appAccount) throws Exception {
+        Collections.sort(bankAccounts);
         for(int i = 1; i <= bankAccounts.size(); i++){
             System.out.println(i + "." + bankAccounts.get(i-1).getIban());
         }
@@ -327,7 +329,15 @@ public class Main {
             Pentru accesarea aplicatiei alegeti din urmatoarele optiuni:
         """
         );
-
+        
+        DataBase db = DataBase.getInstance();
+        try{
+            db.connect();
+        }
+        catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        
         AppAccount appAccount = authentification();
         try {
             bankAccounts = BankAccountUtils.getAllAccounts(appAccount);

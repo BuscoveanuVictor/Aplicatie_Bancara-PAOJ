@@ -1,5 +1,5 @@
 # Folosim imaginea oficiala OpenJDK
-FROM openjdk:23-jdk-slim
+FROM openjdk:21-jdk-slim
 
 # Setam directorul de lucru
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY src/ /app/src/
 COPY lib/ /app/lib/
 
 # Compilam toate fisierele Java cu suport pentru preview features
-RUN javac --enable-preview --release 23 -d /app/out /app/src/Main.java /app/src/BankAccount/*.java /app/src/AppAccount/*.java /app/src/UserBankAccount/*.java /app/src/DB/*.java
+RUN javac --enable-preview --release 21 -cp /app/lib/* -d /app/out /app/src/Main.java /app/src/BankAccount/*.java /app/src/AppAccount/*.java /app/src/UserBankAccount/*.java /app/src/DB/*.java
 
 # Setam comanda de executie cu suport pentru preview features
-CMD ["java", "--enable-preview", "-cp", "/app/out:/app/lib/*", "Main"]
+ENTRYPOINT ["java", "--enable-preview", "-cp", "/app/out:/app/lib/*", "Main"]

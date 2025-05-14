@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
-public class BankAccount {
+public class BankAccount implements Comparable<BankAccount>{
 
     private final User userAccount;
 
@@ -108,6 +108,11 @@ public class BankAccount {
                 ", balanta=" + balanta +
                 ", active=" + active +
                 '}';
+    }
+
+    @Override
+    public int compareTo(BankAccount bankAccount){
+        return this.dataDeschiderii.compareTo(bankAccount.getDataDeschidere());
     }
     
 }

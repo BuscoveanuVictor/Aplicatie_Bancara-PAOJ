@@ -9,4 +9,5 @@ public interface IDataBase {
     public void disconnect() throws SQLException;
     public boolean isConnected();
     public List<Map<String, Object>> executeQuery(String query) throws SQLException;
+    //public void executeProcedure(String procedure) throws SQLException;
 }

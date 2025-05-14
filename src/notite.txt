@@ -1,0 +1,10 @@
+! JDBC
+statement.execute...
+execute -> executa orice tip de query
+executeQuery -> pentru select -> iti intoarce  ResultSet
+executeUpdate -> DML(intoarce nr de linii modificate) si DDL
+
+! DOCKER FILE
+-i: Keeps STDIN open (interactive mode) -> docker compose stdin_open:true
+-t: Allocates a pseudo-TTY (terminal) -> -||-  tty:true
+-ENTRYPOINT vs CMD : CMD poate fi modificat la rularea imaginii
