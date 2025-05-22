@@ -1,5 +1,6 @@
 services:
   app:
+    hostname: docker
     container_name: PAOJ
     build: .
     stdin_open: true     # Permite input din terminal (echivalent cu -i)
@@ -7,7 +8,9 @@ services:
     depends_on:
       - db
     environment:
+      - DB_ENV=docker
       - DB_HOST=host.docker.internal
+      - DB_DATABASE=postgres
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_PASSWORD=mugly11

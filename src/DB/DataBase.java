@@ -11,22 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class DataBase implements IDataBase {
 
     // private static final Logger logger = Logger.getLogger(PgDataBase.class.getName());
 
     private static DataBase instance;
     private Connection connection = null;
-
-
-    private final String URL = "jdbc:postgresql://localhost:5432/postgres";
-    
-    // pt Docker 
-    // private final String URL = "jdbc:postgresql://db:5432/postgres";
-
-    private final String PASSWORD = "mugly11";
-    private final String USERNAME = "postgres";
 
     public static DataBase getInstance() {
         if (instance == null) {
@@ -37,7 +27,26 @@ public class DataBase implements IDataBase {
 
     @Override
     public void connect() throws SQLException {
-        if (connection == null)connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+
+        String env = System.getenv("DB_ENV");
+
+        String hostname = "localhost";
+        String port = "5432";
+        String username = "postgres";
+        String password = "mugly11";
+        String database = "postgres";
+
+        if(env != null){
+            hostname = System.getenv("DB_HOST");
+            database = System.getenv("DB_DATABASE");
+            port = System.getenv("DB_PORT");
+            username = System.getenv("DB_USER");
+            password = System.getenv("DB_PASSWORD");
+        }
+
+        String URL = String.format("jdbc:postgresql://%s:%s/%s", hostname, port, database);
+
+        if (connection == null)connection = DriverManager.getConnection(URL, username, password);
     }
 
     @Override
