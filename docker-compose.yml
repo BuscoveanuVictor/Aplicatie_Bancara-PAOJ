@@ -2,11 +2,15 @@ services:
   app:
     container_name: PAOJ
     build: .
-    tty:  true        # Allocates a pseudo-TTY (like -t)
-    stdin_open: true # Keeps STDIN open (like -i)
+    stdin_open: true     # Permite input din terminal (echivalent cu -i)
+    tty: true            # Aloca un terminal (echivalent cu -t)
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=mugly11
     volumes:
       - ./src:/app/src
     networks:
