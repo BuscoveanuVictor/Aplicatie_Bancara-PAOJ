@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: PAOJ
     build: .
     tty:  true        # Allocates a pseudo-TTY (like -t)
     stdin_open: true # Keeps STDIN open (like -i)

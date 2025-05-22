@@ -1,11 +1,12 @@
 import AppAccount.AppAccount;
-import AppAccount.AppAccountUtils;
+import AppAccount.AppAccountService;
 import BankAccount.BankAccount;
-import BankAccount.BankAccountUtils;
+import BankAccount.BankAccountService;
 import DB.DataBase;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,8 @@ public class Main {
 
     static Scanner SCANNER = new Scanner(System.in);
     static List<BankAccount> bankAccounts = new ArrayList<>();
+    static AppAccountService appAccountService = AppAccountService.getInstance();
+    static BankAccountService bankAccountService = BankAccountService.getInstance();
 
 
     private enum SERVICES {
@@ -73,13 +76,15 @@ public class Main {
 
     public static AppAccount enterApplication(SERVICES service) throws Exception {
 
+        
+
         AppAccount appAccount;
         switch (service) {
             case SERVICES.INREGISTRARE -> {
                 System.out.println(service);
                 appAccount = citireDateContAplicatie();
 
-                AppAccountUtils.register(appAccount);
+                appAccountService.register(appAccount);
                 System.out.println("Inregistrare reusita");
                 System.out.println("Bine ai venit, " + appAccount.getUsername() + "!");
                 return appAccount;
@@ -88,7 +93,7 @@ public class Main {
                 System.out.println(service);
                 appAccount = citireDateContAplicatie();
 
-                AppAccountUtils.login(appAccount);
+                appAccountService.login(appAccount);
                 System.out.println("Logare reusita");
                 System.out.println("Bine ai revenit, " + appAccount.getUsername() + "!");
                 return appAccount;
@@ -100,7 +105,8 @@ public class Main {
 
 
     public static Individual citesteIndividualAccount(AppAccount appAccount) {
-        SCANNER.next();
+
+        SCANNER.nextLine();
 
         System.out.println("Introduceti numele complet: ");
         String nume = SCANNER.nextLine();
@@ -158,8 +164,8 @@ public class Main {
 
         List<BankAccount>  bankAccounts =  new ArrayList<>();
         try {
-            BankAccountUtils.createNewBankAccount(appAccount, userAccount);
-            bankAccounts = BankAccountUtils.getAllAccounts(appAccount);
+            bankAccountService.createNewBankAccount(appAccount, userAccount);
+            bankAccounts = bankAccountService.getAllAccounts(appAccount);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -168,7 +174,7 @@ public class Main {
     public List<BankAccount> getBankAccounts(AppAccount appAccount) {
         List<BankAccount> bankAccounts;
         try{
-            bankAccounts = BankAccountUtils.getAllAccounts(appAccount);
+            bankAccounts = bankAccountService.getAllAccounts(appAccount);
         }catch (Exception e){
             bankAccounts = new ArrayList<>();
             System.out.println(e.getMessage());
@@ -221,7 +227,7 @@ public class Main {
         if(bankAccounts.isEmpty()){
             System.out.println("Nu aveti conturi bancare!");
             creareaContBancar(appAccount);
-            bankAccounts = BankAccountUtils.getAllAccounts(appAccount);
+            bankAccounts = bankAccountService.getAllAccounts(appAccount);
         }
 
 
@@ -243,7 +249,7 @@ public class Main {
                     System.out.println("Introduceti suma de bani pe care doriti sa o retrageti: ");
                     double suma = SCANNER.nextDouble();
 
-                    BankAccountUtils.withdraw(bankAccount, suma);
+                    bankAccountService.withdraw(bankAccount, suma);
                     System.out.println("Retragere reusita!");
                     System.out.println("Noua balanta : " + bankAccount.getBalanta());
 
@@ -253,7 +259,7 @@ public class Main {
                     System.out.println("Introduceti suma de bani pe care doriti sa o depuneti: ");
                     double suma = SCANNER.nextDouble();
 
-                    BankAccountUtils.deposit(bankAccount, suma);
+                    bankAccountService.deposit(bankAccount, suma);
                     System.out.println("Noua balanta : " + bankAccount.getBalanta());
                     System.out.println(bankAccount);
                 }
@@ -280,7 +286,7 @@ public class Main {
                     System.out.println("Introduceti suma de bani pe care doriti sa o transferati:");
                     suma = SCANNER.nextDouble();
 
-                    BankAccountUtils.transfer(bankAccount,bankAccount2,suma);
+                    bankAccountService.transfer(bankAccount,bankAccount2,suma);
                     System.out.println("Transfer reusit!");
                 }
 
@@ -302,7 +308,7 @@ public class Main {
         int optiune;
         do {
             System.out.println(banner);
-            optiune = SCANNER.nextInt();
+            optiune = Integer.parseInt(SCANNER.nextLine());
 
             SERVICES service = SERVICES.getService(-optiune);
             if(service == SERVICES.EXIT){
@@ -334,13 +340,13 @@ public class Main {
         try{
             db.connect();
         }
-        catch (Exception e){
+        catch (SQLException e){
             System.out.println(e.getMessage());
         }
         
         AppAccount appAccount = authentification();
         try {
-            bankAccounts = BankAccountUtils.getAllAccounts(appAccount);
+            bankAccounts = bankAccountService.getAllAccounts(appAccount);
         }
         catch (Exception e) {
             System.out.println(e.getMessage());

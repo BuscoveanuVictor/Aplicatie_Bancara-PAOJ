@@ -19,7 +19,12 @@ public class DataBase implements IDataBase {
     private static DataBase instance;
     private Connection connection = null;
 
-    private final String URL = "jdbc:postgresql://db:5432/postgres";
+
+    private final String URL = "jdbc:postgresql://localhost:5432/postgres";
+    
+    // pt Docker 
+    // private final String URL = "jdbc:postgresql://db:5432/postgres";
+
     private final String PASSWORD = "mugly11";
     private final String USERNAME = "postgres";
 

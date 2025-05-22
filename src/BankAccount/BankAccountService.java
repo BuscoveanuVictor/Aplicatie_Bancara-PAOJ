@@ -1,21 +1,32 @@
 package BankAccount;
 import AppAccount.AppAccount;
-import AppAccount.AppAccountUtils;
-
-import java.util.*;
-
+import AppAccount.AppAccountService;
 import DB.DataBase;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
-import java.math.RoundingMode;
+import java.util.*;
 
-public class BankAccountUtils {
+public class BankAccountService {
 
     private static final Scanner SCANNER = new Scanner(System.in);
 
+    private final AppAccountService appAccountService = AppAccountService.getInstance();
 
-    public static BankAccount createNewBankAccount (AppAccount appAccount, User userAccount) throws Exception {
+    private final DataBase db = DataBase.getInstance();
+
+    private static BankAccountService instance = null;
+
+    private BankAccountService() { }
+
+    public static BankAccountService getInstance() {
+       if (instance == null) {
+           instance = new BankAccountService();
+       }
+        return instance;
+    }
+
+    public BankAccount createNewBankAccount (AppAccount appAccount, User userAccount) throws Exception {
         BankAccount bankAccount = new BankAccount(userAccount);      
         //System.out.println(bankAccount);
         saveBankAccount(appAccount,bankAccount);
@@ -25,9 +36,7 @@ public class BankAccountUtils {
         return bankAccount;
     }
 
-
-    private static void saveBankAccount(AppAccount appAccount,BankAccount bankAccount) throws Exception{
-        DataBase db = DataBase.getInstance();
+    private void saveBankAccount(AppAccount appAccount,BankAccount bankAccount) throws Exception{
 
         String query;
         switch (bankAccount.getUser()) {
@@ -53,7 +62,7 @@ public class BankAccountUtils {
                             bankAccount.getBalanta(),
                             bankAccount.getDataDeschidere(),
                             bankAccount.isActiv(),
-                            AppAccountUtils.getId(appAccount)
+                            appAccount.getId() 
                         );
             }
             case Company company -> {
@@ -80,7 +89,7 @@ public class BankAccountUtils {
                             bankAccount.getBalanta(),
                             bankAccount.getDataDeschidere(),
                             bankAccount.isActiv(),
-                            AppAccountUtils.getId(appAccount)
+                            appAccount.getId()
                         );
             }
             default -> throw new Exception("Eroare la crearea contului: " + bankAccount.getUser());
@@ -91,11 +100,7 @@ public class BankAccountUtils {
         db.executeQuery(query);
     }
 
-    public static List<BankAccount> getAllAccounts(AppAccount appAccount) throws Exception {
-        DataBase db = DataBase.getInstance();
-
-        System.out.println(AppAccountUtils.getId(appAccount));
-
+    public List<BankAccount> getAllAccounts(AppAccount appAccount) throws Exception {
         // ATENTIE : object = String (datele intoarse de la DB sunt de tip String)
         // Map <String,Obj> =  nume coloana si valoare
         List<Map<String, Object>> result =
@@ -105,7 +110,7 @@ public class BankAccountUtils {
                             SELECT * FROM cont_personal
                             WHERE app_account_id=%d
                         """,
-                        AppAccountUtils.getId(appAccount)
+                        appAccount.getId()
                 )
         );
 
@@ -120,7 +125,6 @@ public class BankAccountUtils {
                             row.get("nume_titular").toString(),
                             row.get("cnp").toString()
                         ),
-                        Integer.parseInt(row.get("id").toString()),
                         row.get("iban").toString(),
                         row.get("moneda").toString(),
                         row.get("data_deschidere").toString(),
@@ -128,46 +132,45 @@ public class BankAccountUtils {
                         Boolean.parseBoolean(row.get("activ").toString())
                 )
             );
-
         }
 
         return bankAccounts;
     }
 
-    public static void saveChanges(BankAccount bankAccount) throws Exception {
+    private void saveChanges(BankAccount bankAccount) throws Exception {
         DataBase db = DataBase.getInstance();
-         db.executeQuery(
-             String.format(
-                """
-                    UPDATE cont_personal 
-                    SET 
-                        sold=%f, 
-                        activ=%s 
-                    WHERE 
-                        id=%d
-                    """,
-                    bankAccount.getBalanta(),
-                    bankAccount.isActiv(),
-                    bankAccount.getId()
-            )
-         );
+        db.executeQuery(
+            String.format(
+            """
+                UPDATE cont_personal 
+                SET 
+                    sold=%f, 
+                    activ=%s 
+                WHERE 
+                    app_)account_id=%d
+                """,
+                bankAccount.getBalanta(),
+                bankAccount.isActiv(),
+                bankAccount.getId()
+        )
+        );
     }
 
-    public static void showBalance(BankAccount bankAccount) {   
+    public void showBalance(BankAccount bankAccount) {   
         System.out.println("Balanta contului este de : " + bankAccount.getBalanta() + " " + bankAccount.getMoneda());
     }
 
-    public static void deposit(BankAccount bankAccount, double suma) throws Exception {
+    public void deposit(BankAccount bankAccount, double suma) throws Exception {
         bankAccount.setBalanta(bankAccount.getBalanta() + suma);
         saveChanges(bankAccount);
     }
 
-    public static void withdraw(BankAccount bankAccount, double suma) throws Exception {
+    public void withdraw(BankAccount bankAccount, double suma) throws Exception {
         bankAccount.setBalanta(bankAccount.getBalanta() - suma);
         saveChanges(bankAccount);
     }
 
-    public static void transfer(BankAccount from, BankAccount to, double suma) throws Exception {
+    public void transfer(BankAccount from, BankAccount to, double suma) throws Exception {
         withdraw(from, suma);
         deposit(to, suma);
         saveChanges(from);

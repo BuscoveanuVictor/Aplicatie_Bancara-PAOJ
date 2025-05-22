@@ -1,8 +1,6 @@
 package BankAccount;
 
-import AppAccount.AppAccountUtils;
 import UserBankAccount.User;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -10,8 +8,7 @@ import java.util.Random;
 public class BankAccount implements Comparable<BankAccount>{
 
     private final User userAccount;
-
-    private final Integer id;
+    private int id = 1;
     private final String IBAN;
     private final String moneda;
     private final String dataDeschiderii;
@@ -19,26 +16,25 @@ public class BankAccount implements Comparable<BankAccount>{
     private boolean active;
 
     public BankAccount(User userAccount) {
-
         this.userAccount = userAccount;
-
-        this.id = -1;
         this.dataDeschiderii = currentDate() ;
         this.IBAN = generateRandomIBAN();
         this.moneda = "RON";
         this.balanta = 0.0;
-        this.active = true;
+        this.active = false;
     }
 
-    public BankAccount(User userAccount, Integer id, String IBAN, String moneda, String dataDeschiderii, double balanta, boolean active) {
-
-        this.id =  id;
+    public BankAccount(User userAccount, String IBAN, String moneda, String dataDeschiderii, double balanta, boolean active) {
         this.userAccount = userAccount;
         this.dataDeschiderii = dataDeschiderii ;
         this.IBAN = IBAN;
         this.moneda = moneda;
         this.balanta = balanta;
         this.active = active;
+    }
+
+    {
+        this.id++;
     }
 
     private static String currentDate(){
@@ -81,8 +77,7 @@ public class BankAccount implements Comparable<BankAccount>{
 
 
     // Gettere
-
-    public Integer getId() {return this.id;}
+    public int getId() { return id; }
     public String getIban() { return IBAN; }
     public String getDataDeschidere() { return dataDeschiderii; }
     public double getBalanta() { return balanta; }
@@ -97,6 +92,10 @@ public class BankAccount implements Comparable<BankAccount>{
         }
         this.balanta = balanta;
     }
+    public void activate(boolean activ) {
+        this.active = activ;
+    }
+
 
     @Override
     public String toString() {

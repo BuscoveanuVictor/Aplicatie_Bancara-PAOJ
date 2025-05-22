@@ -10,7 +10,9 @@ public abstract class User {
         this.appAccount = appAccount;
     }
 
-    
+    public AppAccount getAppAccount() {
+        return appAccount;
+    }
 
 }
 
