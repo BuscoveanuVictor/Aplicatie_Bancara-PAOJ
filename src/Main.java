@@ -2,11 +2,10 @@ import AppAccount.AppAccount;
 import AppAccount.AppAccountService;
 import BankAccount.BankAccount;
 import BankAccount.BankAccountService;
-import DB.DataBase;
+import DB.CSVLogger;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +32,8 @@ public class Main {
         CREAZA_CONT_BANCAR(6, "Creaza-ti cont bancar"),
         AFISEAZA_TRANZACTII(7, "Afiseaza tranzactii"),
         TRANSFERA_BANI(9, "Transfera bani"),
-        BLOCHEAZA_CONT(8, "Blocheaza cont");
+        BLOCHEAZA_CONT(8, "Blocheaza cont"),
+        STERGE_CONT(10, "Sterge cont bancar");
 
 
         private final int code;
@@ -60,7 +60,7 @@ public class Main {
         
     }
 
-    public static AppAccount citireDateContAplicatie() {
+    private  static AppAccount citireDateContAplicatie() {
         String email;
         String username;
         String password;
@@ -75,8 +75,6 @@ public class Main {
     }
 
     public static AppAccount enterApplication(SERVICES service) throws Exception {
-
-        
 
         AppAccount appAccount;
         switch (service) {
@@ -104,7 +102,7 @@ public class Main {
     }
 
 
-    public static Individual citesteIndividualAccount(AppAccount appAccount) {
+    private static Individual citesteIndividualAccount(AppAccount appAccount) {
 
         SCANNER.nextLine();
 
@@ -118,7 +116,7 @@ public class Main {
     }
 
 
-    public static Company citesteCompanyAccount(AppAccount appAccount) {
+    private static Company citesteCompanyAccount(AppAccount appAccount) {
         System.out.println("Introduceti numele firmei: ");
         SCANNER.next();
         String numeFirma = SCANNER.nextLine();
@@ -221,6 +219,8 @@ public class Main {
             7. Afiseaza tranzactii
             8. Blocheaza cont
             9. Transfera bani
+            10. Sterge cont
+            -1. Iesire
         """;
 
 
@@ -250,9 +250,9 @@ public class Main {
                     double suma = SCANNER.nextDouble();
 
                     bankAccountService.withdraw(bankAccount, suma);
+                    CSVLogger.logTranzactie("RETRAGERE", bankAccount.getIban(), suma, "Retragere numerar");
                     System.out.println("Retragere reusita!");
                     System.out.println("Noua balanta : " + bankAccount.getBalanta());
-
                 }
                 case SERVICES.DEPUNERE_BANI -> {
                     System.out.println(SERVICES.DEPUNERE_BANI);
@@ -260,6 +260,7 @@ public class Main {
                     double suma = SCANNER.nextDouble();
 
                     bankAccountService.deposit(bankAccount, suma);
+                    CSVLogger.logTranzactie("DEPUNERE", bankAccount.getIban(), suma, "Depunere numerar");
                     System.out.println("Noua balanta : " + bankAccount.getBalanta());
                     System.out.println(bankAccount);
                 }
@@ -286,8 +287,15 @@ public class Main {
                     System.out.println("Introduceti suma de bani pe care doriti sa o transferati:");
                     suma = SCANNER.nextDouble();
 
-                    bankAccountService.transfer(bankAccount,bankAccount2,suma);
+                    bankAccountService.transfer(bankAccount, bankAccount2, suma);
+                    CSVLogger.logTranzactie("TRANSFER", bankAccount.getIban(), suma, 
+                        "Transfer catre " + bankAccount2.getIban());
                     System.out.println("Transfer reusit!");
+                }
+
+                case SERVICES.STERGE_CONT -> {
+                    System.out.println(SERVICES.STERGE_CONT);
+                    bankAccountService.delete(bankAccount, bankAccounts);
                 }
 
             }
@@ -335,15 +343,7 @@ public class Main {
             Pentru accesarea aplicatiei alegeti din urmatoarele optiuni:
         """
         );
-        
-        DataBase db = DataBase.getInstance();
-        try{
-            db.connect();
-        }
-        catch (SQLException e){
-            System.out.println(e.getMessage());
-        }
-        
+    
         AppAccount appAccount = authentification();
         try {
             bankAccounts = bankAccountService.getAllAccounts(appAccount);

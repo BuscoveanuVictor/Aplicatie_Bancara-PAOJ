@@ -5,7 +5,13 @@ import DB.DataBase;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
-import java.util.*;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
 
 public class BankAccountService {
 
@@ -26,13 +32,30 @@ public class BankAccountService {
         return instance;
     }
 
-    public BankAccount createNewBankAccount (AppAccount appAccount, User userAccount) throws Exception {
+    private int getId(BankAccount bankAccount) throws SQLException {
+        String query = String.format(
+                """
+                    SELECT id FROM cont_personal 
+                    WHERE iban = '%s';
+                """,
+                bankAccount.getIban()
+        );
+        List<Map<String, Object>> result = db.executeQuery(query);
+        return result.isEmpty() ? -1 : Integer.parseInt(result.get(0).get("id").toString());
+    }
+
+
+    public BankAccount createNewBankAccount (AppAccount appAccount, User userAccount) {
         BankAccount bankAccount = new BankAccount(userAccount);      
         //System.out.println(bankAccount);
-        saveBankAccount(appAccount,bankAccount);
-        System.out.println("Cont bancar creat cu succes!");
-        System.out.println("Contul tau bancar este: " + bankAccount.getIban());       
-        
+        try {
+            saveBankAccount(appAccount,bankAccount);
+            System.out.println("Cont bancar creat cu succes!");
+            System.out.println("Contul tau bancar este: " + bankAccount.getIban());       
+        } catch (Exception e) {
+            System.out.println("Eroare la crearea contului bancar: " + e.getMessage());
+            return null;
+        }
         return bankAccount;
     }
 
@@ -62,7 +85,7 @@ public class BankAccountService {
                             bankAccount.getBalanta(),
                             bankAccount.getDataDeschidere(),
                             bankAccount.isActiv(),
-                            appAccount.getId() 
+                            appAccountService.getId(appAccount)
                         );
             }
             case Company company -> {
@@ -89,18 +112,15 @@ public class BankAccountService {
                             bankAccount.getBalanta(),
                             bankAccount.getDataDeschidere(),
                             bankAccount.isActiv(),
-                            appAccount.getId()
+                            appAccountService.getId(appAccount)
                         );
             }
             default -> throw new Exception("Eroare la crearea contului: " + bankAccount.getUser());
         }
-        
-        //System.out.println("Query-ul este: " + query);
-
         db.executeQuery(query);
     }
 
-    public List<BankAccount> getAllAccounts(AppAccount appAccount) throws Exception {
+    public List<BankAccount> getAllAccounts(AppAccount appAccount) throws SQLException {
         // ATENTIE : object = String (datele intoarse de la DB sunt de tip String)
         // Map <String,Obj> =  nume coloana si valoare
         List<Map<String, Object>> result =
@@ -110,13 +130,12 @@ public class BankAccountService {
                             SELECT * FROM cont_personal
                             WHERE app_account_id=%d
                         """,
-                        appAccount.getId()
+                        appAccountService.getId(appAccount)
                 )
         );
 
         List<BankAccount> bankAccounts = new ArrayList<>();
         for (Map<String, Object> row : result) {
-
             bankAccounts.add(
                 new BankAccount(
                         new Individual
@@ -137,44 +156,99 @@ public class BankAccountService {
         return bankAccounts;
     }
 
-    private void saveChanges(BankAccount bankAccount) throws Exception {
-        DataBase db = DataBase.getInstance();
-        db.executeQuery(
-            String.format(
-            """
-                UPDATE cont_personal 
-                SET 
-                    sold=%f, 
-                    activ=%s 
-                WHERE 
-                    app_)account_id=%d
-                """,
-                bankAccount.getBalanta(),
-                bankAccount.isActiv(),
-                bankAccount.getId()
-        )
-        );
+    private void updateAccount(BankAccount bankAccount){
+        try{
+            db.executeQuery(
+                String.format(
+                """
+                    UPDATE cont_personal 
+                    SET 
+                        sold=%f, 
+                        activ=%s 
+                    WHERE 
+                        id=%d
+                    """,
+                    bankAccount.getBalanta(),
+                    bankAccount.isActiv(),
+                    getId(bankAccount)
+                )
+            );
+        }catch (SQLException e) {
+            System.out.println("Eroare la actualizarea contului: " + e.getMessage());
+        }
     }
+
+    private void deleteBankAccount(BankAccount bankAccount) throws SQLException {
+        String query = String.format(
+                """
+                    DELETE FROM cont_personal 
+                    WHERE id = %d
+                """,
+                getId(bankAccount)
+        );
+        db.executeQuery(query);
+    }
+
 
     public void showBalance(BankAccount bankAccount) {   
         System.out.println("Balanta contului este de : " + bankAccount.getBalanta() + " " + bankAccount.getMoneda());
     }
 
-    public void deposit(BankAccount bankAccount, double suma) throws Exception {
+    public void deposit(BankAccount bankAccount, double suma){
         bankAccount.setBalanta(bankAccount.getBalanta() + suma);
-        saveChanges(bankAccount);
+        updateAccount(bankAccount);
     }
 
-    public void withdraw(BankAccount bankAccount, double suma) throws Exception {
+    public void withdraw(BankAccount bankAccount, double suma){
         bankAccount.setBalanta(bankAccount.getBalanta() - suma);
-        saveChanges(bankAccount);
+        updateAccount(bankAccount);
     }
 
-    public void transfer(BankAccount from, BankAccount to, double suma) throws Exception {
+    public void transfer(BankAccount from, BankAccount to, double suma){
         withdraw(from, suma);
         deposit(to, suma);
-        saveChanges(from);
-        saveChanges(to);
+        updateAccount(from);
+        updateAccount(to);
     }
 
+
+
+    public void delete(BankAccount bankAccount, List<BankAccount> bankAccounts) throws Exception{
+       
+        System.out.println("Alegeti contul pe care sa transferati suma curenta:");
+
+        // Eliminam contul curent din lista
+        // pentru a nu-l afisa in lista de conturi
+        bankAccounts.stream()
+                .filter(account -> account.getIban().equals(bankAccount.getIban()))
+                .findFirst()
+                .ifPresent(bankAccounts::remove);
+
+        Iterator<BankAccount> iterator = bankAccounts.iterator();
+        int i = 0;
+        while (iterator.hasNext()) {
+            BankAccount account = iterator.next();
+            System.out.println(++i + ". " + account.getIban());
+        }
+
+        int index = SCANNER.nextInt() - 1;
+
+        if (index < 0 || index >= bankAccounts.size()) {
+            // Adaugam din nou contul curent in lista 
+            bankAccounts.add(bankAccount);
+            throw new Exception("Contul selectat nu este valid!");
+        }
+
+        BankAccount transferTo = bankAccounts.get(index);
+        double suma = bankAccount.getBalanta();
+        transfer(bankAccount, transferTo, suma);
+        System.out.println("Suma a fost transferata cu succes!");
+       
+        try {
+            deleteBankAccount(bankAccount);
+            System.out.println("Contul a fost sters cu succes!");
+        } catch (SQLException e) {
+            System.out.println("Eroare la stergerea contului: " + e.getMessage());
+        }
+    }
 }

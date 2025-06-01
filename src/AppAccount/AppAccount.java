@@ -1,8 +1,6 @@
 package AppAccount;
 
 public final class AppAccount {
-
-    private int id=1;
     private String username;
     private String email;
     private String password;
@@ -20,14 +18,6 @@ public final class AppAccount {
         this.email = email;
         this.username = username;
         this.password = password;
-    }
-
-    {
-        this.id ++;
-    }
-
-    public int getId() {
-        return id;
     }
 
     public String getEmail() {

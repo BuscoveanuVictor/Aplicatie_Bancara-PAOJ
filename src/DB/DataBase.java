@@ -11,12 +11,72 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DataBase implements IDataBase {
+
+public final class DataBase implements IDataBase {
 
     // private static final Logger logger = Logger.getLogger(PgDataBase.class.getName());
 
     private static DataBase instance;
-    private Connection connection = null;
+    private Connection connection;
+
+    private final String URL = "jdbc:postgresql://localhost:5432/postgres";
+    
+    // pt Docker 
+    //private final String URL = "jdbc:postgresql://db:5432/postgres";
+
+    private final String PASSWORD = "mugly11";
+    private final String USERNAME = "postgres";
+
+
+    static {
+        instance =  getInstance();
+
+        String query = 
+        """
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                username VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                login BOOLEAN DEFAULT FALSE,
+                name VARCHAR(255),
+                register_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                admin BOOLEAN DEFAULT FALSE
+            );
+
+            CREATE TABLE IF NOT EXISTS cont_personal (
+                id SERIAL PRIMARY KEY,
+                nume_titular VARCHAR(255) NOT NULL,
+                iban VARCHAR(34) NOT NULL UNIQUE,
+                moneda VARCHAR(10) NOT NULL,
+                sold NUMERIC(15,2) NOT NULL DEFAULT 0,
+                data_deschidere DATE NOT NULL,
+                activ BOOLEAN DEFAULT TRUE,
+                app_account_id INTEGER NOT NULL,
+                cnp VARCHAR(13) NOT NULL UNIQUE,
+
+                CONSTRAINT fk_app_account
+                    FOREIGN KEY (app_account_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+        """;
+
+        try {
+            instance.executeQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private DataBase() {
+        try {
+            connect();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    };
 
     public static DataBase getInstance() {
         if (instance == null) {
@@ -27,26 +87,7 @@ public class DataBase implements IDataBase {
 
     @Override
     public void connect() throws SQLException {
-
-        String env = System.getenv("DB_ENV");
-
-        String hostname = "localhost";
-        String port = "5432";
-        String username = "postgres";
-        String password = "mugly11";
-        String database = "postgres";
-
-        if(env != null){
-            hostname = System.getenv("DB_HOST");
-            database = System.getenv("DB_DATABASE");
-            port = System.getenv("DB_PORT");
-            username = System.getenv("DB_USER");
-            password = System.getenv("DB_PASSWORD");
-        }
-
-        String URL = String.format("jdbc:postgresql://%s:%s/%s", hostname, port, database);
-
-        if (connection == null)connection = DriverManager.getConnection(URL, username, password);
+        if (connection == null)connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
     }
 
     @Override

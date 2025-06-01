@@ -7,19 +7,14 @@ services:
     tty: true            # Aloca un terminal (echivalent cu -t)
     depends_on:
       - db
-    environment:
-      - DB_ENV=docker
-      - DB_HOST=host.docker.internal
-      - DB_DATABASE=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=mugly11
     volumes:
       - ./src:/app/src
+      - ./logs:/app/logs
     networks:
       - app-network
 
   db:
+    container_name: db
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data

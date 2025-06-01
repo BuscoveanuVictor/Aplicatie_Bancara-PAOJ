@@ -8,7 +8,6 @@ import java.util.Random;
 public class BankAccount implements Comparable<BankAccount>{
 
     private final User userAccount;
-    private int id = 1;
     private final String IBAN;
     private final String moneda;
     private final String dataDeschiderii;
@@ -33,9 +32,6 @@ public class BankAccount implements Comparable<BankAccount>{
         this.active = active;
     }
 
-    {
-        this.id++;
-    }
 
     private static String currentDate(){
         LocalDate dataCurenta = LocalDate.now();
@@ -77,7 +73,6 @@ public class BankAccount implements Comparable<BankAccount>{
 
 
     // Gettere
-    public int getId() { return id; }
     public String getIban() { return IBAN; }
     public String getDataDeschidere() { return dataDeschiderii; }
     public double getBalanta() { return balanta; }
@@ -113,5 +108,56 @@ public class BankAccount implements Comparable<BankAccount>{
     public int compareTo(BankAccount bankAccount){
         return this.dataDeschiderii.compareTo(bankAccount.getDataDeschidere());
     }
-    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((userAccount == null) ? 0 : userAccount.hashCode());
+        result = prime * result + ((IBAN == null) ? 0 : IBAN.hashCode());
+        result = prime * result + ((moneda == null) ? 0 : moneda.hashCode());
+        result = prime * result + ((dataDeschiderii == null) ? 0 : dataDeschiderii.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(balanta);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + (active ? 1231 : 1237);
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BankAccount other = (BankAccount) obj;
+        if (userAccount == null) {
+            if (other.userAccount != null)
+                return false;
+        } else if (!userAccount.equals(other.userAccount))
+            return false;
+        if (IBAN == null) {
+            if (other.IBAN != null)
+                return false;
+        } else if (!IBAN.equals(other.IBAN))
+            return false;
+        if (moneda == null) {
+            if (other.moneda != null)
+                return false;
+        } else if (!moneda.equals(other.moneda))
+            return false;
+        if (dataDeschiderii == null) {
+            if (other.dataDeschiderii != null)
+                return false;
+        } else if (!dataDeschiderii.equals(other.dataDeschiderii))
+            return false;
+        if (Double.doubleToLongBits(balanta) != Double.doubleToLongBits(other.balanta))
+            return false;
+        if (active != other.active)
+            return false;
+        return true;
+    }
+        
 }
