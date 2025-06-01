@@ -7,6 +7,11 @@ services:
     tty: true            # Aloca un terminal (echivalent cu -t)
     depends_on:
       - db
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=mugly11
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
@@ -16,10 +21,12 @@ services:
   db:
     container_name: db
     image: postgres:15
+    environment:
+      POSTGRES_PASSWORD : postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5431:5432"
+      - 5431:5432 
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 5s
