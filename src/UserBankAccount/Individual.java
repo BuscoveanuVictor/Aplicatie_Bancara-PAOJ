@@ -2,7 +2,7 @@ package UserBankAccount;
 
 import AppAccount.AppAccount;
 
-public final class Individual extends User {
+public class Individual extends User {
     private final String nume_titular;
     private final String cnp;
 

@@ -35,9 +35,10 @@ public class BankAccountService {
     private int getId(BankAccount bankAccount) throws SQLException {
         String query = String.format(
                 """
-                    SELECT id FROM cont_personal 
+                    SELECT id FROM '%s'
                     WHERE iban = '%s';
                 """,
+                bankAccount.getTableName(),
                 bankAccount.getIban()
         );
         List<Map<String, Object>> result = db.executeQuery(query);
@@ -127,7 +128,7 @@ public class BankAccountService {
         db.executeQuery(
                 String.format(
                         """     
-                            SELECT * FROM cont_personal
+                            SELECT * FROM cont_personal, cont_depozit
                             WHERE app_account_id=%d
                         """,
                         appAccountService.getId(appAccount)
@@ -161,13 +162,14 @@ public class BankAccountService {
             db.executeQuery(
                 String.format(
                 """
-                    UPDATE cont_personal 
+                    UPDATE '%s' 
                     SET 
                         sold=%f, 
                         activ=%s 
                     WHERE 
                         id=%d
                     """,
+                    bankAccount.getTableName(),
                     bankAccount.getBalanta(),
                     bankAccount.isActiv(),
                     getId(bankAccount)
@@ -181,9 +183,10 @@ public class BankAccountService {
     private void deleteBankAccount(BankAccount bankAccount) throws SQLException {
         String query = String.format(
                 """
-                    DELETE FROM cont_personal 
+                    DELETE FROM '%s' 
                     WHERE id = %d
                 """,
+                bankAccount.getTableName(),
                 getId(bankAccount)
         );
         db.executeQuery(query);
@@ -210,8 +213,6 @@ public class BankAccountService {
         updateAccount(from);
         updateAccount(to);
     }
-
-
 
     public void delete(BankAccount bankAccount, List<BankAccount> bankAccounts) throws Exception{
        

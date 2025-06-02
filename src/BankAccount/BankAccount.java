@@ -1,35 +1,41 @@
 package BankAccount;
 
+import UserBankAccount.Company;
+import UserBankAccount.Individual;
 import UserBankAccount.User;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
 public class BankAccount implements Comparable<BankAccount>{
-
-    private final User userAccount;
+  
+    private final User titular; // presupunem ca exista o clasa User
     private final String IBAN;
     private final String moneda;
     private final String dataDeschiderii;
     private double balanta;
-    private boolean active;
+    private boolean activ;
 
-    public BankAccount(User userAccount) {
-        this.userAccount = userAccount;
+    public BankAccount(User titular) {
+        if (titular == null) {
+            throw new IllegalArgumentException("Titularul nu poate fi null.");
+        }
+        this.titular = null;
         this.dataDeschiderii = currentDate() ;
         this.IBAN = generateRandomIBAN();
         this.moneda = "RON";
         this.balanta = 0.0;
-        this.active = false;
+        this.activ= false;
     }
 
-    public BankAccount(User userAccount, String IBAN, String moneda, String dataDeschiderii, double balanta, boolean active) {
-        this.userAccount = userAccount;
+    public BankAccount(User titular, String IBAN, String moneda, String dataDeschiderii, double balanta, boolean active) {
+       
+        this.titular = titular;
         this.dataDeschiderii = dataDeschiderii ;
         this.IBAN = IBAN;
         this.moneda = moneda;
         this.balanta = balanta;
-        this.active = active;
+        this.activ = active;
     }
 
 
@@ -73,12 +79,31 @@ public class BankAccount implements Comparable<BankAccount>{
 
 
     // Gettere
+   
     public String getIban() { return IBAN; }
     public String getDataDeschidere() { return dataDeschiderii; }
     public double getBalanta() { return balanta; }
     public String getMoneda() { return moneda; }
-    public boolean isActiv() { return active; }
-    public User getUser() { return userAccount; }
+    public boolean isActiv() { return activ; }
+    public User getUser() { return titular; }
+    public String getTableName() {
+        if (titular instanceof Individual) {
+            if(this.getClass() == DepositAccount.class) {
+                return "cont_personal_depozit";
+            } else if (this.getClass() == DebitAccount.class) {
+                return "cont_personal_debit";
+            }   
+        }
+        if (titular instanceof Company) {
+            if(this.getClass() == DepositAccount.class) {
+                return "cont_firma_depozit";
+            } else if (this.getClass() == DebitAccount.class) {
+                return "cont_firma_debit";
+            }   
+        }   
+        return ""; 
+    }
+   
 
     // Settere
     public void setBalanta(double balanta) {
@@ -88,19 +113,19 @@ public class BankAccount implements Comparable<BankAccount>{
         this.balanta = balanta;
     }
     public void activate(boolean activ) {
-        this.active = activ;
+        this.activ = activ;
     }
 
 
     @Override
     public String toString() {
         return "BankAccount{" +
-                "userAccount=" + userAccount +
+              
                 ", IBAN='" + IBAN + '\'' +
                 ", moneda='" + moneda + '\'' +
                 ", dataDeschiderii='" + dataDeschiderii + '\'' +
                 ", balanta=" + balanta +
-                ", active=" + active +
+                ", active=" + activ +
                 '}';
     }
 
@@ -113,14 +138,13 @@ public class BankAccount implements Comparable<BankAccount>{
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((userAccount == null) ? 0 : userAccount.hashCode());
         result = prime * result + ((IBAN == null) ? 0 : IBAN.hashCode());
         result = prime * result + ((moneda == null) ? 0 : moneda.hashCode());
         result = prime * result + ((dataDeschiderii == null) ? 0 : dataDeschiderii.hashCode());
         long temp;
         temp = Double.doubleToLongBits(balanta);
         result = prime * result + (int) (temp ^ (temp >>> 32));
-        result = prime * result + (active ? 1231 : 1237);
+        result = prime * result + (activ ? 1231 : 1237);
         return result;
     }
 
@@ -133,11 +157,6 @@ public class BankAccount implements Comparable<BankAccount>{
         if (getClass() != obj.getClass())
             return false;
         BankAccount other = (BankAccount) obj;
-        if (userAccount == null) {
-            if (other.userAccount != null)
-                return false;
-        } else if (!userAccount.equals(other.userAccount))
-            return false;
         if (IBAN == null) {
             if (other.IBAN != null)
                 return false;
@@ -155,7 +174,7 @@ public class BankAccount implements Comparable<BankAccount>{
             return false;
         if (Double.doubleToLongBits(balanta) != Double.doubleToLongBits(other.balanta))
             return false;
-        if (active != other.active)
+        if (activ != other.activ)
             return false;
         return true;
     }

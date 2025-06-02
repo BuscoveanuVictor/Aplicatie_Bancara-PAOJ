@@ -4,19 +4,31 @@ import DB.DataBase;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class AppAccountService {
 
-    private final DataBase db = DataBase.getInstance();
+    protected  DataBase db = DataBase.getInstance();
     static AppAccountService instance;
-
-    private AppAccountService() { }
+    static Scanner SCANNER = new Scanner(System.in);
 
     public static AppAccountService getInstance() {
         if (instance == null) {
             instance = new AppAccountService();
         }
         return instance;
+    }
+
+    public AppAccount readAppAccount(){
+        String email, username, password;
+        System.out.println("Introduceti email-ul:");
+        email = SCANNER.nextLine();
+        System.out.println("Introduceti username-ul:");
+        username = SCANNER.nextLine();
+        System.out.println("Introduceti parola:");
+        password = SCANNER.nextLine();
+
+        return new AppAccount(email, username, password);
     }
 
     public int getId(AppAccount user) throws SQLException{
@@ -35,6 +47,9 @@ public class AppAccountService {
 
     public void login(AppAccount user) throws Exception{
         Integer id = getId(user);
+        if(id == -1) {
+            throw new Exception("Utilizatorul nu exista sau datele sunt incorecte.");
+        }
         String query = String.format("UPDATE users SET login = 'true' WHERE id = '%s';", id.toString());
         db.executeQuery(query);
     }
@@ -42,17 +57,19 @@ public class AppAccountService {
     public void register(AppAccount user) throws Exception {
         Integer id = getId(user);
 
+        if (id != -1) {
+            throw new Exception("Utilizatorul deja exista.");
+        }
         String query = String.format
             (
         "INSERT INTO users (id, email, username, password, login) VALUES ('%d','%s', '%s', '%s', true);",
-                id,user.getEmail(), user.getUsername(), user.getPassword()
+                id,user.getEmail(), user.getUsername(), user.getPassword(), user.getRole()
             );      
         db.executeQuery(query);
     }
 
-    public void delete(AppAccount user) throws Exception{
-        String query = String.format("DELETE FROM users WHERE id = '%s';", getId(user));
-        db.executeQuery(query);
-    }
+
+
+ 
 
 }

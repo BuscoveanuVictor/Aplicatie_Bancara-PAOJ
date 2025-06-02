@@ -41,10 +41,10 @@ public final class DataBase implements IDataBase {
                 login BOOLEAN DEFAULT FALSE,
                 name VARCHAR(255),
                 register_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                admin BOOLEAN DEFAULT FALSE
+                role VARCHAR(10) DEFAULT 'user',
             );
 
-            CREATE TABLE IF NOT EXISTS cont_personal (
+            CREATE TABLE IF NOT EXISTS cont_personal_debit (
                 id SERIAL PRIMARY KEY,
                 nume_titular VARCHAR(255) NOT NULL,
                 iban VARCHAR(34) NOT NULL UNIQUE,
@@ -60,6 +60,82 @@ public final class DataBase implements IDataBase {
                     REFERENCES users(id)
                     ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS cont_personal_depozit (
+                id SERIAL PRIMARY KEY,
+                nume_titular VARCHAR(255) NOT NULL,
+                iban VARCHAR(34) NOT NULL UNIQUE,
+                moneda VARCHAR(10) NOT NULL,
+                sold NUMERIC(15,2) NOT NULL DEFAULT 0,
+                data_deschidere DATE NOT NULL,
+                activ BOOLEAN DEFAULT TRUE,
+                app_account_id INTEGER NOT NULL,
+                cnp VARCHAR(13) NOT NULL UNIQUE,
+                dobandaAnuala NUMERIC(5,2) NOT NULL,
+                perioadaLuni INTEGER NOT NULL,
+                sumaDepusa NUMERIC(15,2) NOT NULL,
+            
+
+                CONSTRAINT fk_app_account
+                    FOREIGN KEY (app_account_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS cont_firma_debit (
+                id SERIAL PRIMARY KEY,
+                denumire_firma VARCHAR(255) NOT NULL,
+                iban VARCHAR(34) NOT NULL UNIQUE,
+                moneda VARCHAR(10) NOT NULL,
+                sold NUMERIC(15,2) NOT NULL DEFAULT 0,
+                data_deschidere DATE NOT NULL,
+                activ BOOLEAN DEFAULT TRUE,
+                app_account_id INTEGER NOT NULL,
+                CUI VARCHAR(10) NOT NULL UNIQUE,
+                numar_inregistrare VARCHAR(20) NOT NULL UNIQUE,
+
+                CONSTRAINT fk_app_account
+                    FOREIGN KEY (app_account_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+
+            
+            CREATE TABLE IF NOT EXISTS cont_firma_depozit (
+                id SERIAL PRIMARY KEY,
+                denumire_firma VARCHAR(255) NOT NULL,
+                iban VARCHAR(34) NOT NULL UNIQUE,
+                moneda VARCHAR(10) NOT NULL,
+                sold NUMERIC(15,2) NOT NULL DEFAULT 0,
+                data_deschidere DATE NOT NULL,
+                activ BOOLEAN DEFAULT TRUE,
+                app_account_id INTEGER NOT NULL,
+                CUI VARCHAR(10) NOT NULL UNIQUE,
+                numar_inregistrare VARCHAR(20) NOT NULL UNIQUE,
+                dobandaAnuala NUMERIC(5,2) NOT NULL,
+                perioadaLuni INTEGER NOT NULL,
+                sumaDepusa NUMERIC(15,2) NOT NULL,
+                
+
+                CONSTRAINT fk_app_account
+                    FOREIGN KEY (app_account_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS tranzactii (
+                id SERIAL PRIMARY KEY,
+                tip VARCHAR(50) NOT NULL,
+                suma NUMERIC(15,2) NOT NULL,
+                data_tranzactie TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                cont_id INTEGER NOT NULL,
+
+                CONSTRAINT fk_cont
+                    FOREIGN KEY (cont_id)
+                    REFERENCES cont_personal(id)
+                    ON DELETE CASCADE
+            );
+
         """;
 
         try {
