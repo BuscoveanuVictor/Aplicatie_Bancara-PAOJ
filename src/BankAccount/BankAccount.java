@@ -20,7 +20,7 @@ public class BankAccount implements Comparable<BankAccount>{
         if (titular == null) {
             throw new IllegalArgumentException("Titularul nu poate fi null.");
         }
-        this.titular = null;
+        this.titular = titular;
         this.dataDeschiderii = currentDate() ;
         this.IBAN = generateRandomIBAN();
         this.moneda = "RON";
@@ -120,12 +120,12 @@ public class BankAccount implements Comparable<BankAccount>{
     @Override
     public String toString() {
         return "BankAccount{" +
-              
+                "titular=" + titular +
                 ", IBAN='" + IBAN + '\'' +
                 ", moneda='" + moneda + '\'' +
                 ", dataDeschiderii='" + dataDeschiderii + '\'' +
                 ", balanta=" + balanta +
-                ", active=" + activ +
+                ", activ=" + activ +
                 '}';
     }
 

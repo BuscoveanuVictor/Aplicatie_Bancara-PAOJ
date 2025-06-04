@@ -19,20 +19,20 @@ public final class DataBase implements IDataBase {
     private static DataBase instance;
     private Connection connection;
 
-    //private final String URL = "jdbc:postgresql://localhost:5432/postgres";
+    private final String URL = "jdbc:postgresql://localhost:5432/postgres";
     
     // pt Docker 
-    private final String URL = "jdbc:postgresql://db:5432/postgres";
+    //private final String URL = "jdbc:postgresql://db:5432/postgres";
 
-    private final String PASSWORD = "postgres";
     private final String USERNAME = "postgres";
-
+    private final String PASSWORD = "mugly11";
 
     static {
         instance =  getInstance();
 
         String query = 
         """
+
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(255) NOT NULL UNIQUE,
@@ -41,7 +41,7 @@ public final class DataBase implements IDataBase {
                 login BOOLEAN DEFAULT FALSE,
                 name VARCHAR(255),
                 register_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                role VARCHAR(10) DEFAULT 'user',
+                role VARCHAR(10) DEFAULT 'user'
             );
 
             CREATE TABLE IF NOT EXISTS cont_personal_debit (
@@ -71,9 +71,9 @@ public final class DataBase implements IDataBase {
                 activ BOOLEAN DEFAULT TRUE,
                 app_account_id INTEGER NOT NULL,
                 cnp VARCHAR(13) NOT NULL UNIQUE,
-                dobandaAnuala NUMERIC(5,2) NOT NULL,
-                perioadaLuni INTEGER NOT NULL,
-                sumaDepusa NUMERIC(15,2) NOT NULL,
+                dobanda_anuala NUMERIC(5,2) NOT NULL,
+                perioada_luni INTEGER NOT NULL,
+                suma_depusa NUMERIC(15,2) NOT NULL,
             
 
                 CONSTRAINT fk_app_account
@@ -112,9 +112,9 @@ public final class DataBase implements IDataBase {
                 app_account_id INTEGER NOT NULL,
                 CUI VARCHAR(10) NOT NULL UNIQUE,
                 numar_inregistrare VARCHAR(20) NOT NULL UNIQUE,
-                dobandaAnuala NUMERIC(5,2) NOT NULL,
-                perioadaLuni INTEGER NOT NULL,
-                sumaDepusa NUMERIC(15,2) NOT NULL,
+                dobanda_anuala NUMERIC(5,2) NOT NULL,
+                perioada_luni INTEGER NOT NULL,
+                suma_depusa NUMERIC(15,2) NOT NULL,
                 
 
                 CONSTRAINT fk_app_account
@@ -122,26 +122,12 @@ public final class DataBase implements IDataBase {
                     REFERENCES users(id)
                     ON DELETE CASCADE
             );
-
-            CREATE TABLE IF NOT EXISTS tranzactii (
-                id SERIAL PRIMARY KEY,
-                tip VARCHAR(50) NOT NULL,
-                suma NUMERIC(15,2) NOT NULL,
-                data_tranzactie TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                cont_id INTEGER NOT NULL,
-
-                CONSTRAINT fk_cont
-                    FOREIGN KEY (cont_id)
-                    REFERENCES cont_personal(id)
-                    ON DELETE CASCADE
-            );
-
         """;
 
         try {
             instance.executeQuery(query);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Eroare la crearea tabelelor!");
         }
     }
 
@@ -181,12 +167,9 @@ public final class DataBase implements IDataBase {
 
     @Override
     public List<Map<String, Object>> executeQuery(String query) throws SQLException {
-        connect();
 
         Statement statement = connection.createStatement(); 
         boolean hasResultSet = statement.execute(query);
-
-        disconnect();
 
         // Operatii asupra rezultatului
         if (hasResultSet) {

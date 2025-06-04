@@ -20,20 +20,20 @@ public class Main {
 
 
     private enum SERVICES {
-        INREGISTRARE(-1, "Inregistrare cont aplicatie"),
-        AUTENTIFICARE(-2, "Autentificare cont aplicatie"),
-        EXIT(0, "Iesire..."),
+        INREGISTRARE            (-1, "Inregistrare cont aplicatie"),
+        AUTENTIFICARE           (-2, "Autentificare cont aplicatie"),
+        EXIT                    (0, "Iesire..."),
 
-        AFISEAZA_BALANTA(1, "Afiseaza balanta cont"),
-        RETRAGERE_BANI(2, "Retragere bani"),
-        DEPUNERE_BANI(3, "Depunere bani"),
-        AFISEAZA_CONTURI(4, "Afiseaza conturi bancare"),
-        AFISEAZA_DETALII_CONT(5, "Afiseaza detalii cont"),
-        CREAZA_CONT_BANCAR(6, "Creaza-ti cont bancar"),
-        AFISEAZA_TRANZACTII(7, "Afiseaza tranzactii"),
-        TRANSFERA_BANI(9, "Transfera bani"),
-        BLOCHEAZA_CONT(8, "Blocheaza cont"),
-        STERGE_CONT(10, "Sterge cont bancar");
+        AFISEAZA_BALANTA        (1, "Afiseaza balanta cont"),
+        RETRAGERE_BANI          (2, "Retragere bani"),
+        DEPUNERE_BANI           (3, "Depunere bani"),
+        AFISEAZA_CONTURI        (4, "Afiseaza conturi bancare"),
+        AFISEAZA_DETALII_CONT   (5, "Afiseaza detalii cont"),
+        CREAZA_CONT_BANCAR      (6, "Creaza-ti cont bancar"),
+        AFISEAZA_TRANZACTII     (7, "Afiseaza tranzactii"),
+        TRANSFERA_BANI          (9, "Transfera bani"),
+        BLOCHEAZA_CONT          (8, "Blocheaza cont"),
+        STERGE_CONT             (10, "Sterge cont bancar");
 
 
         private final int code;
@@ -60,249 +60,7 @@ public class Main {
         
     }
 
-    private  static AppAccount citireDateContAplicatie() {
-        String email;
-        String username;
-        String password;
-
-        System.out.println("Introduceti email-ul: ");
-        email = SCANNER.next();
-        System.out.println("Introduceti username-ul: ");
-        username = SCANNER.next();
-        System.out.println("Introduceti parola: ");
-        password = SCANNER.next();
-        return new AppAccount(email, username, password);
-    }
-
-    public static AppAccount enterApplication(SERVICES service) throws Exception {
-
-        AppAccount appAccount;
-        switch (service) {
-            case SERVICES.INREGISTRARE -> {
-                System.out.println(service);
-                appAccount = citireDateContAplicatie();
-
-                appAccountService.register(appAccount);
-                System.out.println("Inregistrare reusita");
-                System.out.println("Bine ai venit, " + appAccount.getUsername() + "!");
-                return appAccount;
-            }
-            case SERVICES.AUTENTIFICARE -> {
-                System.out.println(service);
-                appAccount = citireDateContAplicatie();
-
-                appAccountService.login(appAccount);
-                System.out.println("Logare reusita");
-                System.out.println("Bine ai revenit, " + appAccount.getUsername() + "!");
-                return appAccount;
-            }
-        }
-
-        return null;
-    }
-
-
-    private static Individual citesteIndividualAccount(AppAccount appAccount) {
-
-        SCANNER.nextLine();
-
-        System.out.println("Introduceti numele complet: ");
-        String nume = SCANNER.nextLine();
-
-        System.out.println("Introduceti cnp-ul: ");
-        String cnp = SCANNER.nextLine();
-
-        return new Individual(appAccount, nume, cnp);
-    }
-
-
-    private static Company citesteCompanyAccount(AppAccount appAccount) {
-        System.out.println("Introduceti numele firmei: ");
-        SCANNER.next();
-        String numeFirma = SCANNER.nextLine();
-
-        System.out.println("Introduceti codul unic de inregistrare: ");
-        SCANNER.next();
-        String CUI = SCANNER.nextLine();
-
-        System.out.println("Introduceti numarInregistrare: ");
-        SCANNER.next();
-        String numarInregistrare = SCANNER.nextLine();
-
-        return new Company(appAccount, numeFirma, CUI, numarInregistrare);
-    }
-
-
-    public static void creareaContBancar(AppAccount appAccount){
-        System.out.println(
-        """
-            Alegeti tipul contului
-            1. Cont pe persoana fizica
-            2. Cont pe firma
-            0. Anulare
-        """
-        );
-
-        int optiune;
-        User userAccount = null;
-        do {
-            optiune = SCANNER.nextInt();
-            switch (optiune) {
-                case 1 -> {
-                    userAccount = citesteIndividualAccount(appAccount);
-                }
-                case 2 -> {
-                    userAccount = citesteCompanyAccount(appAccount);
-                }
-                default -> {
-                    System.out.println("Optiune invalida. Alegeti 1 sau 2.");
-                }
-            }
-        } while (userAccount == null);
-
-        List<BankAccount>  bankAccounts =  new ArrayList<>();
-        try {
-            bankAccountService.createNewBankAccount(appAccount, userAccount);
-            bankAccounts = bankAccountService.getAllAccounts(appAccount);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public List<BankAccount> getBankAccounts(AppAccount appAccount) {
-        List<BankAccount> bankAccounts;
-        try{
-            bankAccounts = bankAccountService.getAllAccounts(appAccount);
-        }catch (Exception e){
-            bankAccounts = new ArrayList<>();
-            System.out.println(e.getMessage());
-        }
-        return bankAccounts;
-    }
-
-    public static void displayBankAccounts(AppAccount appAccount) throws Exception {
-        Collections.sort(bankAccounts);
-        for(int i = 1; i <= bankAccounts.size(); i++){
-            System.out.println(i + "." + bankAccounts.get(i-1).getIban());
-        }
-    }
-
-    private static BankAccount chooseAccount() {
-        int index;
-        System.out.println("Alege contul:");
-        do{
-            index = SCANNER.nextInt();
-            if(index<1 || index>bankAccounts.size()){
-                System.out.println("Cont bancar invalid");
-                index = -1;
-            }
-        }while(index == -1);
-
-        // Intrucat lista de conturi bancare incepe de la 0
-        index--;
-        BankAccount bankAccount = bankAccounts.get(index);
-        return bankAccount;
-    }
-
-
-    public static void serviciiConturiBancare(AppAccount appAccount)
-            throws Exception {
-
-        String banner =
-        """ 
-            1. Afiseaza balanta cont
-            2. Retragere bani
-            3. Depunere bani
-            4. Afiseaza conturi bancar
-            5. Afiseaza detalii cont
-            6. Creaza-ti cont bancar
-            7. Afiseaza tranzactii
-            8. Blocheaza cont
-            9. Transfera bani
-            10. Sterge cont
-            -1. Iesire
-        """;
-
-
-        if(bankAccounts.isEmpty()){
-            System.out.println("Nu aveti conturi bancare!");
-            creareaContBancar(appAccount);
-            bankAccounts = bankAccountService.getAllAccounts(appAccount);
-        }
-
-
-        int optiune;
-        do{
-            System.out.println(banner);
-            optiune = SCANNER.nextInt();
-            SERVICES service = SERVICES.getService(optiune);
-
-            BankAccount bankAccount=null;
-            if(service != SERVICES.AFISEAZA_CONTURI) {
-                displayBankAccounts(appAccount);
-                bankAccount = chooseAccount();
-            }
-
-            switch (service) {
-                case SERVICES.RETRAGERE_BANI -> {
-                    System.out.println(SERVICES.RETRAGERE_BANI);
-                    System.out.println("Introduceti suma de bani pe care doriti sa o retrageti: ");
-                    double suma = SCANNER.nextDouble();
-
-                    bankAccountService.withdraw(bankAccount, suma);
-                    CSVLogger.logTranzactie("RETRAGERE", bankAccount.getIban(), suma, "Retragere numerar");
-                    System.out.println("Retragere reusita!");
-                    System.out.println("Noua balanta : " + bankAccount.getBalanta());
-                }
-                case SERVICES.DEPUNERE_BANI -> {
-                    System.out.println(SERVICES.DEPUNERE_BANI);
-                    System.out.println("Introduceti suma de bani pe care doriti sa o depuneti: ");
-                    double suma = SCANNER.nextDouble();
-
-                    bankAccountService.deposit(bankAccount, suma);
-                    CSVLogger.logTranzactie("DEPUNERE", bankAccount.getIban(), suma, "Depunere numerar");
-                    System.out.println("Noua balanta : " + bankAccount.getBalanta());
-                    System.out.println(bankAccount);
-                }
-
-                case SERVICES.AFISEAZA_BALANTA -> {
-                    System.out.println(SERVICES.AFISEAZA_BALANTA);
-                    System.out.println("Balanta contului tau este: " + bankAccount.getBalanta());
-                }
-
-                case SERVICES.AFISEAZA_DETALII_CONT -> {
-                    System.out.println(SERVICES.AFISEAZA_DETALII_CONT);
-                    System.out.println(bankAccount);
-                }
-
-                case SERVICES.AFISEAZA_CONTURI -> {
-                    System.out.println(SERVICES.AFISEAZA_CONTURI);
-                    displayBankAccounts(appAccount);
-                }
-
-                case SERVICES.TRANSFERA_BANI -> {
-                    displayBankAccounts(appAccount);
-                    BankAccount bankAccount2 = chooseAccount();
-                    double suma;
-                    System.out.println("Introduceti suma de bani pe care doriti sa o transferati:");
-                    suma = SCANNER.nextDouble();
-
-                    bankAccountService.transfer(bankAccount, bankAccount2, suma);
-                    CSVLogger.logTranzactie("TRANSFER", bankAccount.getIban(), suma, 
-                        "Transfer catre " + bankAccount2.getIban());
-                    System.out.println("Transfer reusit!");
-                }
-
-                case SERVICES.STERGE_CONT -> {
-                    System.out.println(SERVICES.STERGE_CONT);
-                    bankAccountService.delete(bankAccount, bankAccounts);
-                }
-
-            }
-        }while(optiune != -1);
-    }
-
-    static AppAccount authentification(){
+    static AppAccount entryPointApp(){
 
         String banner =
                 """ 
@@ -325,7 +83,7 @@ public class Main {
             }
             else {
                 try {
-                    appAccount = enterApplication(service);
+                    appAccount = auth(service);
                 }catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -333,6 +91,129 @@ public class Main {
         }while(appAccount == null);
 
         return appAccount;
+    }
+
+    public static AppAccount auth(SERVICES service) throws Exception {
+
+        System.out.println(service);
+        AppAccount appAccount = appAccountService.readAppAccount();
+        
+        switch (service) {    
+            case INREGISTRARE -> {
+                appAccountService.register(appAccount);
+                System.out.println("Inregistrare reusita");
+                System.out.println("Bine ai venit, " + appAccount.getUsername() + "!");
+                return appAccount;
+            }
+            case AUTENTIFICARE -> {
+                appAccountService.login(appAccount);
+                System.out.println("Logare reusita");
+                System.out.println("Bine ai revenit, " + appAccount.getUsername() + "!");
+                return appAccount;
+            }
+        }
+
+        return null;
+    }
+
+    public static void serviciiConturiBancare(AppAccount appAccount)
+            throws Exception {
+
+        String banner =
+        """ 
+            1. Afiseaza balanta cont
+            2. Retragere bani
+            3. Depunere bani
+            4. Afiseaza conturi bancar
+            5. Afiseaza detalii cont
+            6. Creaza-ti cont bancar
+            7. Afiseaza tranzactii
+            8. Blocheaza cont
+            9. Transfera bani
+            10. Sterge cont
+            -1. Iesire
+        """;
+
+
+        if(bankAccounts.isEmpty()){
+            System.out.println("Nu aveti conturi bancare!");
+            bankAccountService.createNewBankAccount(appAccount);
+            CSVLogger.logOperatie("Creare cont bancar nou");
+        }
+
+
+        int optiune;
+        BankAccount bankAccount;
+        do{
+            System.out.println(banner);
+            optiune = SCANNER.nextInt();
+            SERVICES service = SERVICES.getService(optiune);
+
+            switch (service) {
+                case RETRAGERE_BANI -> {
+                    System.out.println(SERVICES.RETRAGERE_BANI);
+                    System.out.println("Introduceti suma de bani pe care doriti sa o retrageti: ");
+                    double suma = SCANNER.nextDouble();
+
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    bankAccountService.withdraw(bankAccount, suma);
+                    CSVLogger.logOperatie("Retragere suma " + suma + " RON");
+                    System.out.println("Retragere reusita!");
+                    System.out.println("Noua balanta : " + bankAccount.getBalanta());
+                }
+                case DEPUNERE_BANI -> {
+                    System.out.println(SERVICES.DEPUNERE_BANI);
+                    System.out.println("Introduceti suma de bani pe care doriti sa o depuneti: ");
+                    double suma = SCANNER.nextDouble();
+
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    bankAccountService.deposit(bankAccount, suma);
+                    CSVLogger.logOperatie("Depunere suma " + suma + " RON");
+                    System.out.println("Noua balanta : " + bankAccount.getBalanta());
+                    System.out.println(bankAccount);
+                }
+
+                case AFISEAZA_BALANTA -> {
+                    System.out.println(SERVICES.AFISEAZA_BALANTA);
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    System.out.println("Balanta contului tau este: " + bankAccount.getBalanta());
+                    CSVLogger.logOperatie("Afisare balanta cont");
+                }
+
+                case AFISEAZA_DETALII_CONT -> {
+                    System.out.println(SERVICES.AFISEAZA_DETALII_CONT);
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    System.out.println(bankAccount);
+                    CSVLogger.logOperatie("Afisare detalii cont");
+                }
+
+                case AFISEAZA_CONTURI -> {
+                    System.out.println(SERVICES.AFISEAZA_CONTURI);
+                    bankAccountService.getAllAccounts(appAccount);
+                    CSVLogger.logOperatie("Afisare lista conturi");
+                }
+
+                case CREAZA_CONT_BANCAR -> {
+                    System.out.println(SERVICES.CREAZA_CONT_BANCAR);
+                    bankAccountService.createNewBankAccount(appAccount);
+                    CSVLogger.logOperatie("Creare cont bancar nou");
+                }
+
+                case BLOCHEAZA_CONT -> {
+                    System.out.println(SERVICES.BLOCHEAZA_CONT);
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    bankAccount.activate(false);
+                    CSVLogger.logOperatie("Blocare cont bancar");
+                }
+
+                case STERGE_CONT -> {
+                    System.out.println(SERVICES.STERGE_CONT);
+                    bankAccount = bankAccountService.chooseAccount(appAccount);
+                    bankAccountService.delete(bankAccount, bankAccounts);
+                    CSVLogger.logOperatie("Stergere cont bancar");
+                }
+            }
+        }while(optiune != -1);
     }
 
     public static void main(String[] args) {
@@ -344,14 +225,15 @@ public class Main {
         """
         );
     
-        AppAccount appAccount = authentification();
+        AppAccount appAccount = entryPointApp();
         try {
             bankAccounts = bankAccountService.getAllAccounts(appAccount);
         }
         catch (Exception e) {
+            System.out.println("Eroare la obtinerea conturilor bancare");
             System.out.println(e.getMessage());
             bankAccounts = new ArrayList<>();
-        }
+        }  
 
         try {
             serviciiConturiBancare(appAccount);

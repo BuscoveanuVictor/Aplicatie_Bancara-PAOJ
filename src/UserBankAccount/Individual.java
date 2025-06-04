@@ -17,6 +17,14 @@ public class Individual extends User {
         this.nume_titular = nume_titular;
         this.cnp = cnp;
     }
+    @Override
+    public String toString() {
+        return "Individual{" +
+                "nume_titular='" + nume_titular + '\'' +
+                ", cnp='" + cnp + '\'' +
+                ", appAccount=" + getAppAccount() +
+                '}';
+    }
 
     public String getCnp() {
         return cnp;

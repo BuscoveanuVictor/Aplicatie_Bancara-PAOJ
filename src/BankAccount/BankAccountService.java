@@ -5,8 +5,11 @@ import DB.DataBase;
 import UserBankAccount.Company;
 import UserBankAccount.Individual;
 import UserBankAccount.User;
+import UserBankAccount.UserService;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,7 @@ public class BankAccountService {
     private static final Scanner SCANNER = new Scanner(System.in);
 
     private final AppAccountService appAccountService = AppAccountService.getInstance();
+    private final UserService userService = new UserService();
 
     private final DataBase db = DataBase.getInstance();
 
@@ -30,6 +34,51 @@ public class BankAccountService {
            instance = new BankAccountService();
        }
         return instance;
+    }
+
+    public void displayBankAccounts(AppAccount appAccount){
+        List<BankAccount> bankAccounts = getAllAccounts(appAccount);
+        Collections.sort(bankAccounts);
+        
+        for(int i = 1; i <= bankAccounts.size(); i++){
+            BankAccount bankAccount =  bankAccounts.get(i-1);
+            System.out.println(
+                """
+                    %d. IBAN: %s 
+                    Titular: %s 
+                    Tip: %s
+                    Data deschidere: %s
+                """.formatted(
+                    i, 
+                    bankAccount.getIban(),
+                    (bankAccount.getUser() instanceof Individual individual) ? 
+                    individual.getNume() : ((Company) bankAccount.getUser()).getDenumire(),
+                    bankAccount.getClass().getSimpleName(),
+                    bankAccount.getDataDeschidere()
+                )
+            );
+        }
+    }
+
+    public BankAccount chooseAccount(AppAccount appAccount) {
+
+        displayBankAccounts(appAccount);
+
+        int index;
+        List<BankAccount> bankAccounts = getAllAccounts(appAccount);
+        System.out.println("Alege contul:");
+        do{
+            index = SCANNER.nextInt();
+            if(index<1 || index>bankAccounts.size()){
+                System.out.println("Cont bancar invalid");
+                index = -1;
+            }
+        }while(index == -1);
+
+        // Intrucat lista de conturi bancare incepe de la 0
+        index--;
+        BankAccount bankAccount = bankAccounts.get(index);
+        return bankAccount;
     }
 
     private int getId(BankAccount bankAccount) throws SQLException {
@@ -46,9 +95,60 @@ public class BankAccountService {
     }
 
 
-    public BankAccount createNewBankAccount (AppAccount appAccount, User userAccount) {
-        BankAccount bankAccount = new BankAccount(userAccount);      
-        //System.out.println(bankAccount);
+    public BankAccount createNewBankAccount (AppAccount appAccount) {
+        System.out.println(
+            """
+                Alegeti tipul de beneficiar al contului bancar:
+                1. Cont pe persoana fizica
+                2. Cont pe firma
+                0. Anulare
+            """
+        );
+
+        int optiune;
+        User userAccount = null;
+        do {
+            optiune = SCANNER.nextInt();
+            switch (optiune) {
+                case 1 -> {
+                    userAccount = userService.createIndividualUser(appAccount);
+                }
+                case 2 -> {
+                    userAccount = userService.createCompanyUser(appAccount);
+                }
+                default -> {
+                    System.out.println("Optiune invalida. Alegeti 1 sau 2.");
+                }
+            }
+        } while (userAccount == null);
+
+        System.out.println(
+            """
+                Alegeti tipul contului bancar:
+                1. Cont de debit
+                2. Cont de depozit
+                0. Anulare
+            """
+        );
+
+        BankAccount bankAccount = null;
+        do {
+            optiune = SCANNER.nextInt();
+            switch (optiune) {
+                case 1 -> {
+                    bankAccount = new DebitAccount(userAccount);
+                }
+                case 2 -> {
+                    bankAccount = new DepositAccount(userAccount);
+                }
+                default -> {
+                    System.out.println("Optiune invalida. Alegeti 1 sau 2.");
+                }
+            }
+        } while (bankAccount == null);
+
+     
+
         try {
             saveBankAccount(appAccount,bankAccount);
             System.out.println("Cont bancar creat cu succes!");
@@ -62,96 +162,273 @@ public class BankAccountService {
 
     private void saveBankAccount(AppAccount appAccount,BankAccount bankAccount) throws Exception{
 
-        String query;
-        switch (bankAccount.getUser()) {
-            case Individual individual -> {
-                query = String.format(
-                            """
-                                INSERT INTO cont_personal (
-                                    nume_titular, 
-                                    cnp, 
-                                    iban, 
-                                    moneda, 
-                                    sold, 
-                                    data_deschidere, 
-                                    activ, 
-                                    app_account_id
-                                   ) 
-                                VALUES ('%s', '%s', '%s', '%s', %f, '%s', %s, %d)
-                            """,
-                            individual.getNume(),
-                            individual.getCnp(),
-                            bankAccount.getIban(),
-                            bankAccount.getMoneda(),
-                            bankAccount.getBalanta(),
-                            bankAccount.getDataDeschidere(),
-                            bankAccount.isActiv(),
-                            appAccountService.getId(appAccount)
-                        );
-            }
-            case Company company -> {
-                query = String.format(
-                            """
-                                INSERT INTO cont_firma(
-                                    denumire_firma, 
-                                    CUI, 
-                                    numar_inregistrare,
-                                    iban, 
-                                    moneda, 
-                                    sold, 
-                                    data_deschidere, 
-                                    activ, 
-                                    app_account_id
-                                ) 
-                                VALUES (%s, %s, %s, %s, %s, %f, %s, %s, %d)
-                            """,
-                            company.getDenumire(),
-                            company.getCUI(),
-                            company.getNumarInregistrare(),
-                            bankAccount.getIban(),
-                            bankAccount.getMoneda(),
-                            bankAccount.getBalanta(),
-                            bankAccount.getDataDeschidere(),
-                            bankAccount.isActiv(),
-                            appAccountService.getId(appAccount)
-                        );
-            }
-            default -> throw new Exception("Eroare la crearea contului: " + bankAccount.getUser());
+        String query = null;
+        User user = bankAccount.getUser();
+        System.out.println(user);
+        if (user == null) {
+            throw new Exception("Utilizatorul nu este valid.");
         }
-        db.executeQuery(query);
+
+        if (user instanceof Individual individual && bankAccount instanceof DepositAccount) {
+            query = String.format(
+                """
+                    INSERT INTO cont_personal_depozit (
+                        nume_titular, 
+                        cnp, 
+                        iban, 
+                        moneda, 
+                        sold, 
+                        data_deschidere, 
+                        activ, 
+                        app_account_id,
+                        dobanda_anuala,
+                        perioada_luni,
+                        suma_depusa
+                    ) 
+                    VALUES ('%s', '%s', '%s', '%s', %f, '%s', %s, %d, %f, %d, %f)
+                """,
+                individual.getNume(),
+                individual.getCnp(),
+                bankAccount.getIban(),
+                bankAccount.getMoneda(),
+                bankAccount.getBalanta(),
+                bankAccount.getDataDeschidere(),
+                bankAccount.isActiv(),
+                appAccountService.getId(appAccount),
+                ((DepositAccount)bankAccount).getDobandaAnuala(),
+                ((DepositAccount)bankAccount).getPerioadaLuni(),
+                ((DepositAccount)bankAccount).getSumaDepusa()
+            );
+        } 
+
+        if (user instanceof Individual individual && bankAccount instanceof DebitAccount) {
+            query = String.format(
+                """
+                    INSERT INTO cont_personal_debit (
+                        nume_titular, 
+                        cnp, 
+                        iban, 
+                        moneda, 
+                        sold, 
+                        data_deschidere, 
+                        activ, 
+                        app_account_id
+                    ) 
+                    VALUES ('%s', '%s', '%s', '%s', %f, '%s', %s, %d)
+                """,
+                individual.getNume(),
+                individual.getCnp(),
+                bankAccount.getIban(),
+                bankAccount.getMoneda(),
+                bankAccount.getBalanta(),
+                bankAccount.getDataDeschidere(),
+                bankAccount.isActiv(),
+                appAccountService.getId(appAccount)
+            );
+        }
+
+        if (user instanceof Company company && bankAccount instanceof DepositAccount) {
+            query = String.format(
+                """
+                    INSERT INTO cont_firma_depozit (
+                        denumire_firma, 
+                        CUI,
+                        numar_inregistrare,
+                        iban, 
+                        moneda, 
+                        sold, 
+                        data_deschidere, 
+                        activ, 
+                        app_account_id,
+                        dobanda_anuala,
+                        perioada_luni,
+                        suma_depusa
+                    ) 
+                    VALUES ('%s', '%s', '%s', '%s', '%s', %f, '%s', %s, %d, %f, %d, %f)
+                """,
+                company.getDenumire(),
+                company.getCUI(),
+                company.getNumarInregistrare(),
+                bankAccount.getIban(),
+                bankAccount.getMoneda(),
+                bankAccount.getBalanta(),
+                bankAccount.getDataDeschidere(),
+                bankAccount.isActiv(),
+                appAccountService.getId(appAccount),
+                ((DepositAccount)bankAccount).getDobandaAnuala(),
+                ((DepositAccount)bankAccount).getPerioadaLuni(),
+                ((DepositAccount)bankAccount).getSumaDepusa()
+            );
+        }
+
+        if( user instanceof Company company && bankAccount instanceof DebitAccount) {
+            query = String.format(
+                """
+                    INSERT INTO cont_firma_debit (
+                        denumire_firma, 
+                        CUI,
+                        numar_inregistrare,
+                        iban, 
+                        moneda, 
+                        sold, 
+                        data_deschidere, 
+                        activ, 
+                        app_account_id
+                    ) 
+                    VALUES ('%s', '%s', '%s', '%s', '%s', %f, '%s', %s, %d)
+                """,
+                company.getDenumire(),
+                company.getCUI(),
+                company.getNumarInregistrare(),
+                bankAccount.getIban(),
+                bankAccount.getMoneda(),
+                bankAccount.getBalanta(),
+                bankAccount.getDataDeschidere(),
+                bankAccount.isActiv(),
+                appAccountService.getId(appAccount)
+            );
+        }
+
+        try {
+            db.executeQuery(query);
+            System.out.println("Contul bancar a fost salvat cu succes!");
+        } catch (SQLException e) {
+            throw new Exception("Eroare la salvarea contului bancar: " + e.getMessage());
+        }
     }
 
-    public List<BankAccount> getAllAccounts(AppAccount appAccount) throws SQLException {
+    public List<BankAccount> getAllAccounts(AppAccount appAccount) {
         // ATENTIE : object = String (datele intoarse de la DB sunt de tip String)
         // Map <String,Obj> =  nume coloana si valoare
-        List<Map<String, Object>> result =
-        db.executeQuery(
-                String.format(
-                        """     
-                            SELECT * FROM cont_personal, cont_depozit
-                            WHERE app_account_id=%d
-                        """,
-                        appAccountService.getId(appAccount)
+        List<List<Map<String, Object>>> result = new ArrayList<>();
+        try {
+            result.add(db.executeQuery(
+                    String.format(
+                            """
+                                SELECT * FROM cont_personal_debit
+                                WHERE app_account_id = %d;
+                            """,
+                            appAccountService.getId(appAccount)
+                    )
                 )
-        );
+            );
+            result.add(db.executeQuery(
+                    String.format(
+                            """
+                                SELECT * FROM cont_personal_depozit
+                                WHERE app_account_id = %d;
+                            """,
+                            appAccountService.getId(appAccount)
+                    )
+                )
+            );
+            result.add(db.executeQuery(
+                    String.format(
+                            """
+                                SELECT * FROM cont_firma_debit
+                                WHERE app_account_id = %d;
+                            """,
+                            appAccountService.getId(appAccount)
+                    )
+                )
+            );
+            result.add(db.executeQuery(
+                    String.format(
+                            """
+                                SELECT * FROM cont_firma_depozit
+                                WHERE app_account_id = %d;
+                            """,
+                            appAccountService.getId(appAccount)
+                    )
+                )
+            );
 
-        List<BankAccount> bankAccounts = new ArrayList<>();
-        for (Map<String, Object> row : result) {
-            bankAccounts.add(
-                new BankAccount(
+        } catch (SQLException e) {
+            System.out.println("Eroare la obtinerea conturilor bancare: " + e.getMessage());
+            
+        }
+
+        List<BankAccount> bankAccounts = new ArrayList<>(); // Lista de conturi bancare
+        for(int i = 0; i < result.size(); i++) {
+            List<Map<String, Object>> list = result.get(i);
+            if(list.isEmpty()) {
+                continue; // Daca lista este goala, trecem la urmatoarea
+            }
+            
+            if(i == 0) {
+                // Conturi personale de debit
+               bankAccounts.add( new DebitAccount(
                         new Individual
                         (
                             appAccount,
-                            row.get("nume_titular").toString(),
-                            row.get("cnp").toString()
+                            list.get(0).get("nume_titular").toString(),
+                            list.get(0).get("cnp").toString()
                         ),
-                        row.get("iban").toString(),
-                        row.get("moneda").toString(),
-                        row.get("data_deschidere").toString(),
-                        Double.parseDouble(row.get("sold").toString()),
-                        Boolean.parseBoolean(row.get("activ").toString())
-                )
-            );
+                        list.get(0).get("iban").toString(),
+                        list.get(0).get("moneda").toString(),
+                        list.get(0).get("data_deschidere").toString(),
+                        Double.parseDouble(list.get(0).get("sold").toString()),
+                        Boolean.parseBoolean(list.get(0).get("activ").toString())
+                    )
+                );
+            } else if (i == 1) {
+                bankAccounts.add( new DepositAccount(
+                        new Individual
+                        (
+                            appAccount,
+                            list.get(0).get("nume_titular").toString(),
+                            list.get(0).get("cnp").toString()
+                        ),
+                        list.get(0).get("iban").toString(),
+                        list.get(0).get("moneda").toString(),
+                        list.get(0).get("data_deschidere").toString(),
+                        Double.parseDouble(list.get(0).get("sold").toString()),
+                        Boolean.parseBoolean(list.get(0).get("activ").toString()),
+                        Double.parseDouble(list.get(0).get("dobanda_anuala").toString()),
+                        Integer.parseInt(list.get(0).get("perioada_luni").toString()),
+                        Double.parseDouble(list.get(0).get("suma_depusa").toString())
+                    )
+                );
+            } else if (i == 2) {
+                // Conturi de debit pe firma
+                bankAccounts.add( new DebitAccount(
+                        new Company
+                        (
+                            appAccount,
+                            list.get(0).get("denumire_firma").toString(),
+                            list.get(0).get("CUI").toString(),
+                            list.get(0).get("numar_inregistrare").toString()
+                        ),
+                        list.get(0).get("iban").toString(),
+                        list.get(0).get("moneda").toString(),
+                        list.get(0).get("data_deschidere").toString(),
+                        Double.parseDouble(list.get(0).get("sold").toString()),
+                        Boolean.parseBoolean(list.get(0).get("activ").toString())
+                    )
+                );
+
+            } else if (i == 3) {
+                // Conturi de depozit pe firma
+                bankAccounts.add( new DepositAccount(
+                        new Company
+                        (
+                            appAccount,
+                            list.get(0).get("denumire_firma").toString(),
+                            list.get(0).get("CUI").toString(),
+                            list.get(0).get("numar_inregistrare").toString()
+                        ),
+                        list.get(0).get("iban").toString(),
+                        list.get(0).get("moneda").toString(),
+                        list.get(0).get("data_deschidere").toString(),
+                        Double.parseDouble(list.get(0).get("sold").toString()),
+                        Boolean.parseBoolean(list.get(0).get("activ").toString()),
+                        Double.parseDouble(list.get(0).get("dobanda_anuala").toString()),
+                        Integer.parseInt(list.get(0).get("perioada_luni").toString()),
+                        Double.parseDouble(list.get(0).get("suma_depusa").toString())
+                    )
+                );
+            }
+            System.out.println("Conturi bancare gasite: " + list.size());
         }
 
         return bankAccounts;

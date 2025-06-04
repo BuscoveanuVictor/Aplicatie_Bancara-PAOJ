@@ -1,6 +1,9 @@
 package AppAccount;
 
 import DB.DataBase;
+import UserBankAccount.Company;
+import UserBankAccount.Individual;
+
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,36 @@ public class AppAccountService {
         password = SCANNER.nextLine();
 
         return new AppAccount(email, username, password);
+    }
+
+    private static Individual citesteIndividualAccount(AppAccount appAccount) {
+
+        SCANNER.nextLine();
+
+        System.out.println("Introduceti numele complet: ");
+        String nume = SCANNER.nextLine();
+
+        System.out.println("Introduceti cnp-ul: ");
+        String cnp = SCANNER.nextLine();
+
+        return new Individual(appAccount, nume, cnp);
+    }
+
+
+    private static Company citesteCompanyAccount(AppAccount appAccount) {
+        System.out.println("Introduceti numele firmei: ");
+        SCANNER.next();
+        String numeFirma = SCANNER.nextLine();
+
+        System.out.println("Introduceti codul unic de inregistrare: ");
+        SCANNER.next();
+        String CUI = SCANNER.nextLine();
+
+        System.out.println("Introduceti numarInregistrare: ");
+        SCANNER.next();
+        String numarInregistrare = SCANNER.nextLine();
+
+        return new Company(appAccount, numeFirma, CUI, numarInregistrare);
     }
 
     public int getId(AppAccount user) throws SQLException{
